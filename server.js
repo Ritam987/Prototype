@@ -123,20 +123,29 @@ function getOAuthRedirectUrl(req) {
 }
 
 function createSessionStorage(req) {
+  // Ensure supabaseOAuthStorage exists
   if (!req.session.supabaseOAuthStorage) {
     req.session.supabaseOAuthStorage = {};
   }
 
   return {
     getItem(key) {
-      return req.session.supabaseOAuthStorage?.[key] || null;
+      const value = req.session.supabaseOAuthStorage?.[key] || null;
+      console.log('📦 Session Storage GET:', key, value ? '(exists)' : '(null)');
+      return value;
     },
     setItem(key, value) {
       req.session.supabaseOAuthStorage[key] = value;
+      console.log('💾 Session Storage SET:', key, '(stored)');
+      // Force save session immediately
+      req.session.save((err) => {
+        if (err) console.error('❌ Session save error:', err);
+      });
     },
     removeItem(key) {
       if (req.session.supabaseOAuthStorage) {
         delete req.session.supabaseOAuthStorage[key];
+        console.log('🗑️ Session Storage REMOVE:', key);
       }
     }
   };
@@ -144,16 +153,20 @@ function createSessionStorage(req) {
 
 function createOAuthClient(req) {
   if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('❌ Supabase credentials missing');
     return null;
   }
 
+  console.log('🔧 Creating OAuth client with session storage');
+  
   return createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       autoRefreshToken: false,
       detectSessionInUrl: false,
       flowType: 'pkce',
       persistSession: true,
-      storage: createSessionStorage(req)
+      storage: createSessionStorage(req),
+      storageKey: 'supabase-auth-token'
     }
   });
 }
@@ -332,56 +345,116 @@ app.get('/api/config-check', function (req, res) {
 });
 
 app.get('/auth/google', async (req, res) => {
+  console.log('🔐 Starting Google OAuth flow...');
+  
   const authClient = createOAuthClient(req);
-  if (!authClient) return res.status(500).send('Supabase auth client not initialized');
+  if (!authClient) {
+    console.error('❌ Supabase auth client not initialized');
+    return res.status(500).send('Supabase auth client not initialized');
+  }
 
   const redirectTo = getOAuthRedirectUrl(req);
   
-  // Debug logging (remove in production if needed)
-  console.log('🔐 OAuth Flow Started:', {
+  console.log('🔐 OAuth Flow Configuration:', {
     environment: isProduction ? 'production' : 'development',
     redirectTo: redirectTo,
-    origin: getRequestOrigin(req)
+    origin: getRequestOrigin(req),
+    sessionID: req.sessionID
   });
   
-  const { data, error } = await authClient.auth.signInWithOAuth({
-    provider: 'google',
-    options: {
-      redirectTo: redirectTo
-    }
-  });
-
-  if (error) return res.status(500).send('Auth Error: ' + error.message);
-  if (!data?.url) return res.status(500).send('Auth Error: Google redirect URL was not returned.');
-
   try {
+    const { data, error } = await authClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectTo,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
+      }
+    });
+
+    if (error) {
+      console.error('❌ OAuth error:', error);
+      return res.redirect('/login?error=auth_failed');
+    }
+    
+    if (!data?.url) {
+      console.error('❌ No OAuth URL returned');
+      return res.redirect('/login?error=auth_failed');
+    }
+
+    console.log('✅ OAuth URL generated, saving session...');
+    
+    // Force save session before redirect
     await saveSession(req);
+    
+    console.log('✅ Session saved, redirecting to Google...');
     return res.redirect(data.url);
+    
   } catch (err) {
-    console.error('OAuth session save error:', err);
-    return res.status(500).send('Session Save Error');
+    console.error('❌ OAuth flow error:', err);
+    return res.redirect('/login?error=auth_failed');
   }
 });
 
 app.get('/auth/callback', async (req, res) => {
+  console.log('🔄 OAuth callback received');
+  console.log('📍 Callback URL:', req.url);
+  console.log('📍 Query params:', req.query);
+  console.log('📍 Session ID:', req.sessionID);
+  
   const code = typeof req.query.code === 'string' ? req.query.code : '';
+  const error_code = req.query.error;
+  const error_description = req.query.error_description;
+  
+  // Check for OAuth errors from Google
+  if (error_code) {
+    console.error('❌ OAuth error from provider:', {
+      error: error_code,
+      description: error_description
+    });
+    return res.redirect('/login?error=auth_failed');
+  }
+  
   if (!code) {
     console.error('❌ OAuth callback: missing authorization code');
+    console.error('❌ Full query:', req.query);
     return res.redirect('/login?error=missing_code');
   }
 
+  console.log('✅ Authorization code received');
+  
   const authClient = createOAuthClient(req);
   if (!authClient) {
     console.error('❌ OAuth callback: Supabase client not initialized');
-    return res.status(500).send('Supabase auth client not initialized');
+    return res.redirect('/login?error=auth_failed');
   }
 
   try {
     console.log('🔄 Exchanging authorization code for session...');
+    console.log('📦 Session storage check:', req.session.supabaseOAuthStorage);
+    
     const { data, error } = await authClient.auth.exchangeCodeForSession(code);
-    if (error) throw error;
+    
+    if (error) {
+      console.error('❌ Exchange code error:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        status: error.status,
+        name: error.name
+      });
+      return res.redirect('/login?error=auth_failed');
+    }
+    
+    if (!data || !data.session || !data.user) {
+      console.error('❌ No session or user data returned');
+      console.error('❌ Data received:', data);
+      return res.redirect('/login?error=auth_failed');
+    }
 
-    const authUser = data.user || data.session?.user;
+    const authUser = data.user;
+    const session = data.session;
     const email = requiredText(authUser?.email).toLowerCase();
     const userName = requiredText(
       authUser?.user_metadata?.full_name ||
@@ -390,14 +463,36 @@ app.get('/auth/callback', async (req, res) => {
     );
 
     if (!email) {
-      throw new Error('Authenticated user email was not returned.');
+      console.error('❌ No email in user data');
+      return res.redirect('/login?error=auth_failed');
     }
 
     console.log('✅ Google authentication successful for:', email);
+    console.log('✅ Session data:', {
+      access_token: session.access_token ? '(exists)' : '(missing)',
+      refresh_token: session.refresh_token ? '(exists)' : '(missing)',
+      expires_at: session.expires_at
+    });
 
     // Check if user profile exists in database
+    console.log('🔍 Checking user profile in database...');
     const existingUser = await findUserProfileByEmail(email);
     console.log('📊 User profile check:', existingUser ? 'Found' : 'Not found');
+    
+    if (existingUser) {
+      console.log('📊 Existing user data:', {
+        id: existingUser.id,
+        email: existingUser.email,
+        role: existingUser.role
+      });
+    }
+
+    // Store Supabase session data
+    req.session.supabaseSession = {
+      access_token: session.access_token,
+      refresh_token: session.refresh_token,
+      expires_at: session.expires_at
+    };
 
     // Set session data
     req.session.googleAuthenticated = true;
@@ -407,7 +502,7 @@ app.get('/auth/callback', async (req, res) => {
     req.session.userRole = existingUser?.role || null;
     req.session.userId = existingUser?.id || null;
     
-    // Clear OAuth storage
+    // Clear OAuth storage (no longer needed)
     delete req.session.supabaseOAuthStorage;
 
     // Force save session before redirect
@@ -416,19 +511,22 @@ app.get('/auth/callback', async (req, res) => {
     console.log('💾 Session saved:', {
       email: req.session.userEmail,
       isProfileCompleted: req.session.isProfileCompleted,
-      role: req.session.userRole
+      role: req.session.userRole,
+      sessionID: req.sessionID
     });
 
     // Redirect based on profile completion
     if (!existingUser) {
-      console.log('➡️ Redirecting to profile setup');
+      console.log('➡️ Redirecting to profile setup (new user)');
       return res.redirect('/setup-profile');
     }
 
-    console.log('➡️ Redirecting to dashboard');
+    console.log('➡️ Redirecting to dashboard (existing user)');
     return res.redirect('/dashboard');
+    
   } catch (err) {
     console.error('❌ Authentication callback failed:', err);
+    console.error('❌ Error stack:', err.stack);
     return res.redirect('/login?error=auth_failed');
   }
 });
@@ -640,9 +738,23 @@ app.post('/submit-test', async function (req, res) {
   }));
 });
 
-app.get('/logout', (req, res) => {
+app.get('/logout', async (req, res) => {
   const userEmail = req.session.userEmail;
   console.log('👋 Logout request from:', userEmail || 'anonymous');
+  
+  // Try to sign out from Supabase if we have session data
+  if (req.session.supabaseSession) {
+    try {
+      const authClient = createOAuthClient(req);
+      if (authClient) {
+        console.log('🔓 Signing out from Supabase...');
+        await authClient.auth.signOut();
+      }
+    } catch (err) {
+      console.error('⚠️ Supabase signout error:', err);
+      // Continue with session destruction even if Supabase signout fails
+    }
+  }
   
   req.session.destroy((err) => {
     if (err) {
