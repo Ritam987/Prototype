@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="<%= description %>">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <main>
+    <section class="auth-page">
+      <div class="container">
+        <div class="auth-card">
+          <h1>Complete Your Profile</h1>
+          <p class="subtitle">Just a few more details to get started with CareerPath.</p>
+
+          <form id="setupForm" action="/auth/register-profile" method="POST">
+            <!-- Hidden email field -->
+            <input type="hidden" name="email" value="<%= email %>">
+
+            <!-- Role Selection -->
+            <div class="form-group">
+              <label for="roleSelect">I am a</label>
+              <select id="roleSelect" name="role" required>
+                <option value="">Select your role</option>
+                <option value="student">Student</option>
+                <option value="counselor">Career Counselor</option>
+              </select>
+            </div>
+
+            <!-- Full Name -->
+            <div class="form-group">
+              <label for="fullName">Full Name</label>
+              <input
+                type="text"
+                id="fullName"
+                name="name"
+                required
+                placeholder="Enter your full name"
+                value="<%= name %>"
+              >
+            </div>
+
+            <!-- Student-Specific Fields (hidden by default) -->
+            <div id="studentFields" style="display: none;">
+              <!-- Add any student-specific fields here if needed -->
+            </div>
+
+            <!-- Counselor-Specific Fields (hidden by default) -->
+            <div id="counselorFields" style="display: none;">
+              <div class="form-group">
+                <label for="specialization">Area of Specialization</label>
+                <select id="specialization" name="specialization">
+                  <option value="">Select specialization</option>
+                  <option value="technical">IT / Engineering</option>
+                  <option value="sales">Sales / Marketing</option>
+                  <option value="finance">Finance / Accounting</option>
+                  <option value="teaching">Teaching / Social Work</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="experience">Years of Experience</label>
+                <select id="experience" name="experience">
+                  <option value="">Select experience</option>
+                  <option value="1">1 - 3 years</option>
+                  <option value="3">3 - 5 years</option>
+                  <option value="5">5 - 10 years</option>
+                  <option value="10">10+ years</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="phone">Phone Number</label>
+                <input
+                  type="tel"
+                  id="phone"
+                  name="phone"
+                  placeholder="+91 00000 00000"
+                >
+              </div>
+            </div>
+
+            <!-- Submit Button -->
+            <button type="submit" class="btn btn-secondary btn-block" id="submitBtn">
+              Complete Setup & Continue
+            </button>
+          </form>
+
+          <p style="text-align: center; margin-top: 1.5rem;">
+            <a href="/login">Back to Login</a>
+          </p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script>
+    $(document).ready(function () {
+      // Toggle counselor fields based on role selection
+      $('#roleSelect').on('change', function () {
+        const role = $(this).val();
+
+        if (role === 'counselor') {
+          $('#counselorFields').slideDown(200);
+          $('#studentFields').slideUp(200);
+          // Make counselor fields required
+          $('#specialization').prop('required', true);
+          $('#experience').prop('required', true);
+        } else if (role === 'student') {
+          $('#studentFields').slideDown(200);
+          $('#counselorFields').slideUp(200);
+          // Remove required from counselor fields
+          $('#specialization').prop('required', false);
+          $('#experience').prop('required', false);
+        } else {
+          $('#studentFields').slideUp(200);
+          $('#counselorFields').slideUp(200);
+          $('#specialization').prop('required', false);
+          $('#experience').prop('required', false);
+        }
+      });
+
+      // Form validation
+      $('#setupForm').on('submit', function (e) {
+        const role = $('#roleSelect').val();
+
+        if (!role) {
+          e.preventDefault();
+          alert('Please select your role');
+          return;
+        }
+
+        if (role === 'counselor') {
+          const specialization = $('#specialization').val();
+          const experience = $('#experience').val();
+
+          if (!specialization || !experience) {
+            e.preventDefault();
+            alert('Please fill in all required counselor fields');
+            return;
+          }
+        }
+      });
+    });
+  </script>
+</body>
+</html>

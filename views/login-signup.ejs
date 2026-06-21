@@ -22,33 +22,14 @@
     <section class="auth-page">
       <div class="container">
         <div class="auth-card">
-          <h1 id="authTitle">Create Your Account</h1>
-          <p class="subtitle" id="authSubtitle">Join our platform and unlock personalized career guidance.</p>
+          <h1>Sign in to CareerPath</h1>
+          <p class="subtitle">Continue with Google to access your career guidance dashboard.</p>
 
           <button type="button" class="google-btn" id="googleAuthBtn">
             <img src="/assets/google-logo.svg" alt="Google logo">
-            Sign in with Google
+            Continue with Google
           </button>
-
-          <div class="divider">or continue with email</div>
-
-          <form id="authForm" action="/auth/register" method="POST">
-            <div class="form-group" id="roleSelectGroup">
-              <label for="roleSelect">I am a</label>
-              <select id="roleSelect" name="role" required>
-                <option value="student">I am a Student</option>
-                <option value="counselor">I am a Career Counselor</option>
-              </select>
-            </div>
-
-            <div id="dynamicFields"></div>
-
-            <button type="submit" class="btn btn-secondary btn-block" id="authSubmitBtn">Create Account</button>
-          </form>
-
-          <p class="form-toggle">
-            <a href="#" id="toggleAuthMode">Already have an account? Switch to Login</a>
-          </p>
+          <p class="form-toggle" id="authMessage"></p>
         </div>
       </div>
     </section>
