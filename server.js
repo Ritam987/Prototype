@@ -78,6 +78,19 @@ function getRequestOrigin(req) {
 
 function getOAuthRedirectUrl(req) {
   const configured = requiredText(process.env.OAUTH_REDIRECT_URL);
+  const requestOrigin = getRequestOrigin(req);
+
+  // Debug logging to help identify issues
+  console.log('🔍 OAuth Redirect Debug:', {
+    OAUTH_REDIRECT_URL_env: configured || '(empty)',
+    requestOrigin: requestOrigin,
+    isProduction: isProduction,
+    NODE_ENV: process.env.NODE_ENV,
+    forwardedProto: req.headers['x-forwarded-proto'],
+    forwardedHost: req.headers['x-forwarded-host'],
+    protocol: req.protocol,
+    host: req.get('host')
+  });
 
   // If OAUTH_REDIRECT_URL is configured and valid, use it
   if (configured) {
@@ -87,21 +100,24 @@ function getOAuthRedirectUrl(req) {
       // Security: Block localhost URLs in production
       if (isProduction && (url.hostname === 'localhost' || url.hostname === '127.0.0.1')) {
         console.warn('⚠️ SECURITY WARNING: localhost URL detected in production environment. Using request origin instead.');
-        return new URL('/auth/callback', getRequestOrigin(req)).toString();
+        return new URL('/auth/callback', requestOrigin).toString();
       }
       
       if (url.pathname.replace(/\/+$/, '') === '/auth/callback') {
+        console.log('✅ Using configured OAuth redirect:', url.toString());
         return url.toString();
       }
-      return new URL('/auth/callback', url.origin).toString();
+      const finalUrl = new URL('/auth/callback', url.origin).toString();
+      console.log('✅ Using configured OAuth redirect (adjusted path):', finalUrl);
+      return finalUrl;
     } catch (error) {
-      console.error('Invalid OAUTH_REDIRECT_URL, falling back to request origin:', error.message);
+      console.error('❌ Invalid OAUTH_REDIRECT_URL, falling back to request origin:', error.message);
     }
   }
 
   // Fallback to dynamic detection from request
-  const dynamicUrl = new URL('/auth/callback', getRequestOrigin(req)).toString();
-  console.log('Using dynamic OAuth redirect URL:', dynamicUrl);
+  const dynamicUrl = new URL('/auth/callback', requestOrigin).toString();
+  console.log('✅ Using dynamic OAuth redirect URL:', dynamicUrl);
   return dynamicUrl;
 }
 
@@ -262,6 +278,31 @@ app.get('/privacy', function (req, res) {
     title: 'CareerPath | Privacy Policy',
     description: 'CareerPath privacy policy and data protection practices.'
   }));
+});
+
+// Diagnostic endpoint to check configuration (only for debugging)
+app.get('/api/config-check', function (req, res) {
+  // Only allow in development or when specifically enabled
+  if (process.env.NODE_ENV === 'production' && process.env.ENABLE_CONFIG_CHECK !== 'true') {
+    return res.status(404).send('Not found');
+  }
+
+  res.json({
+    environment: process.env.NODE_ENV,
+    isProduction: isProduction,
+    requestOrigin: getRequestOrigin(req),
+    oauthRedirectUrl: getOAuthRedirectUrl(req),
+    headers: {
+      'x-forwarded-proto': req.headers['x-forwarded-proto'],
+      'x-forwarded-host': req.headers['x-forwarded-host'],
+      'host': req.get('host')
+    },
+    envVars: {
+      OAUTH_REDIRECT_URL: process.env.OAUTH_REDIRECT_URL ? '(set)' : '(empty)',
+      SUPABASE_URL: process.env.SUPABASE_URL ? '(set)' : '(missing)',
+      PORT: process.env.PORT
+    }
+  });
 });
 
 app.get('/auth/google', async (req, res) => {
