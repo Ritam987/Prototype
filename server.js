@@ -48,7 +48,8 @@ app.use(session({
     httpOnly: true,
     sameSite: 'lax',
     maxAge: 24 * 60 * 60 * 1000
-  }
+  },
+  name: 'careerpath.sid' // Give the session cookie a specific name
 }));
 
 app.use(express.static('public'));
@@ -202,11 +203,19 @@ app.get('/login', function (req, res) {
 });
 
 app.get('/student-dashboard', function (req, res) {
+  console.log('👨‍🎓 Student dashboard accessed:', {
+    googleAuthenticated: req.session.googleAuthenticated,
+    isProfileCompleted: req.session.isProfileCompleted,
+    userRole: req.session.userRole
+  });
+
   if (!req.session.googleAuthenticated || !req.session.isProfileCompleted) {
-    return res.redirect('/login');
+    console.warn('⚠️ Student dashboard: Unauthorized access, redirecting to login');
+    return res.redirect('/login?error=auth_required');
   }
 
   if (req.session.userRole !== 'student') {
+    console.warn('⚠️ Student dashboard: Wrong role, redirecting to dashboard');
     return res.redirect('/dashboard');
   }
 
@@ -214,11 +223,19 @@ app.get('/student-dashboard', function (req, res) {
     title: 'CareerPath | Student Dashboard',
     description: 'Student dashboard for CareerPath career counseling platform.',
     dashboardHref: '/student-dashboard',
-    userEmail: req.session.userEmail
+    userEmail: req.session.userEmail,
+    userName: req.session.userName
   }));
 });
 
 app.get('/test', function (req, res) {
+  console.log('📝 Test page accessed');
+  
+  if (!req.session.googleAuthenticated || !req.session.isProfileCompleted) {
+    console.warn('⚠️ Test: Unauthorized access, redirecting to login');
+    return res.redirect('/login?error=auth_required');
+  }
+  
   res.render('test', viewData('test', {
     title: 'CareerPath | Psychometric Test',
     description: 'Complete your 50-question psychometric career assessment.',
@@ -236,11 +253,19 @@ app.get('/report', function (req, res) {
 });
 
 app.get('/counselor-dashboard', function (req, res) {
+  console.log('👨‍💼 Counselor dashboard accessed:', {
+    googleAuthenticated: req.session.googleAuthenticated,
+    isProfileCompleted: req.session.isProfileCompleted,
+    userRole: req.session.userRole
+  });
+
   if (!req.session.googleAuthenticated || !req.session.isProfileCompleted) {
-    return res.redirect('/login');
+    console.warn('⚠️ Counselor dashboard: Unauthorized access, redirecting to login');
+    return res.redirect('/login?error=auth_required');
   }
 
   if (req.session.userRole !== 'counselor') {
+    console.warn('⚠️ Counselor dashboard: Wrong role, redirecting to dashboard');
     return res.redirect('/dashboard');
   }
 
@@ -248,7 +273,8 @@ app.get('/counselor-dashboard', function (req, res) {
     title: 'CareerPath | Counselor Dashboard',
     description: 'Career counselor dashboard for managing assigned students.',
     dashboardHref: '/counselor-dashboard',
-    userEmail: req.session.userEmail
+    userEmail: req.session.userEmail,
+    userName: req.session.userName
   }));
 });
 
@@ -340,13 +366,18 @@ app.get('/auth/google', async (req, res) => {
 app.get('/auth/callback', async (req, res) => {
   const code = typeof req.query.code === 'string' ? req.query.code : '';
   if (!code) {
+    console.error('❌ OAuth callback: missing authorization code');
     return res.redirect('/login?error=missing_code');
   }
 
   const authClient = createOAuthClient(req);
-  if (!authClient) return res.status(500).send('Supabase auth client not initialized');
+  if (!authClient) {
+    console.error('❌ OAuth callback: Supabase client not initialized');
+    return res.status(500).send('Supabase auth client not initialized');
+  }
 
   try {
+    console.log('🔄 Exchanging authorization code for session...');
     const { data, error } = await authClient.auth.exchangeCodeForSession(code);
     if (error) throw error;
 
@@ -362,34 +393,60 @@ app.get('/auth/callback', async (req, res) => {
       throw new Error('Authenticated user email was not returned.');
     }
 
-    const existingUser = await findUserProfileByEmail(email);
+    console.log('✅ Google authentication successful for:', email);
 
+    // Check if user profile exists in database
+    const existingUser = await findUserProfileByEmail(email);
+    console.log('📊 User profile check:', existingUser ? 'Found' : 'Not found');
+
+    // Set session data
     req.session.googleAuthenticated = true;
     req.session.userEmail = email;
     req.session.userName = userName;
     req.session.isProfileCompleted = !!existingUser;
     req.session.userRole = existingUser?.role || null;
+    req.session.userId = existingUser?.id || null;
+    
+    // Clear OAuth storage
     delete req.session.supabaseOAuthStorage;
 
+    // Force save session before redirect
     await saveSession(req);
+    
+    console.log('💾 Session saved:', {
+      email: req.session.userEmail,
+      isProfileCompleted: req.session.isProfileCompleted,
+      role: req.session.userRole
+    });
 
+    // Redirect based on profile completion
     if (!existingUser) {
+      console.log('➡️ Redirecting to profile setup');
       return res.redirect('/setup-profile');
     }
 
+    console.log('➡️ Redirecting to dashboard');
     return res.redirect('/dashboard');
   } catch (err) {
-    console.error('Authentication callback failed:', err);
+    console.error('❌ Authentication callback failed:', err);
     return res.redirect('/login?error=auth_failed');
   }
 });
 
 app.get('/setup-profile', (req, res) => {
+  console.log('📝 Setup profile accessed:', {
+    googleAuthenticated: req.session.googleAuthenticated,
+    isProfileCompleted: req.session.isProfileCompleted,
+    userEmail: req.session.userEmail
+  });
+
   if (!req.session.googleAuthenticated) {
-    return res.status(403).send('Error: You must sign in with Google first before accessing this form.');
+    console.warn('⚠️ Setup profile: User not authenticated, redirecting to login');
+    return res.redirect('/login?error=auth_required');
   }
 
   if (req.session.isProfileCompleted) {
+    console.log('✅ Setup profile: Profile already complete, redirecting to dashboard');
     return res.redirect('/dashboard');
   }
 
@@ -406,9 +463,19 @@ app.get('/setup-profile', (req, res) => {
 });
 
 app.post('/auth/register-profile', async (req, res) => {
-  if (!supabase) return res.status(500).send('Supabase database client not initialized');
+  console.log('📋 Profile registration attempt:', {
+    email: req.body.email,
+    role: req.body.role,
+    sessionAuth: req.session.googleAuthenticated
+  });
+
+  if (!supabase) {
+    console.error('❌ Supabase not initialized');
+    return res.status(500).send('Supabase database client not initialized');
+  }
 
   if (!req.session.googleAuthenticated) {
+    console.error('❌ Unauthorized session state');
     return res.status(403).send('Unauthorized session state.');
   }
 
@@ -420,30 +487,42 @@ app.post('/auth/register-profile', async (req, res) => {
   const name = requiredText(req.body.name);
 
   if (!email || email !== sessionEmail) {
+    console.error('❌ Email mismatch:', { provided: email, session: sessionEmail });
     return res.status(400).send('Form email does not match the authenticated Google account.');
   }
 
   if (!role || !name) {
+    console.error('❌ Missing required fields');
     return res.status(400).send('Missing required fields.');
   }
 
   try {
+    console.log('💾 Creating user profile in database...');
+    
     const { data: newUser, error: userError } = await supabase
       .from('users')
       .upsert({ email, role }, { onConflict: 'email' })
       .select('id, email, role')
       .single();
 
-    if (userError) return res.status(500).send('Database insertion error: ' + userError.message);
+    if (userError) {
+      console.error('❌ Database error:', userError);
+      return res.status(500).send('Database insertion error: ' + userError.message);
+    }
+
+    console.log('✅ User created:', newUser);
 
     if (role === 'counselor') {
       const normalizedSpecialization = normalizeSpecialization(req.body.specialization);
       const rawExperience = requiredText(req.body.experience);
 
       if (!normalizedSpecialization || !rawExperience) {
+        console.error('❌ Missing counselor fields');
         return res.status(400).send('Counselor specialization and experience are required.');
       }
 
+      console.log('💾 Creating counselor profile...');
+      
       const { error: counselorError } = await supabase
         .from('counselors')
         .upsert({
@@ -455,41 +534,60 @@ app.post('/auth/register-profile', async (req, res) => {
           phone: requiredText(req.body.phone) || 'Not provided'
         }, { onConflict: 'id' });
 
-      if (counselorError) return res.status(500).send('Counselor mapping error: ' + counselorError.message);
+      if (counselorError) {
+        console.error('❌ Counselor profile error:', counselorError);
+        return res.status(500).send('Counselor mapping error: ' + counselorError.message);
+      }
+      
+      console.log('✅ Counselor profile created');
     }
 
+    // Update session with complete profile data
     req.session.userEmail = email;
     req.session.userName = name;
     req.session.userRole = role;
+    req.session.userId = newUser.id;
     req.session.isProfileCompleted = true;
+    
+    // Save session and redirect
     return req.session.save((err) => {
-      if (err) return res.status(500).send('Session processing error.');
+      if (err) {
+        console.error('❌ Session save error:', err);
+        return res.status(500).send('Session processing error.');
+      }
+      
+      console.log('✅ Profile setup complete, redirecting to dashboard');
       return res.redirect('/dashboard');
     });
   } catch (err) {
-    console.error('Profile registration error:', err);
+    console.error('❌ Profile registration error:', err);
     return res.status(500).send('An error occurred while saving your profile');
   }
 });
 
 app.get('/dashboard', (req, res) => {
-  // Debug: Log session state
-  console.log('SESSION @ /dashboard:', {
+  console.log('🏠 Dashboard accessed:', {
     googleAuthenticated: req.session.googleAuthenticated,
     isProfileCompleted: req.session.isProfileCompleted,
     userRole: req.session.userRole,
-    userEmail: req.session.userEmail
+    userEmail: req.session.userEmail,
+    sessionID: req.sessionID
   });
 
+  // Check authentication
   if (!req.session.googleAuthenticated) {
-    return res.redirect('/login');
+    console.warn('⚠️ Dashboard: User not authenticated, redirecting to login');
+    return res.redirect('/login?error=auth_required');
   }
 
+  // Check profile completion
   if (!req.session.isProfileCompleted) {
+    console.warn('⚠️ Dashboard: Profile not completed, redirecting to setup');
     return res.redirect('/setup-profile');
   }
 
   const role = req.session.userRole || 'student';
+  console.log('✅ Dashboard: Redirecting to', role, 'dashboard');
 
   if (role === 'counselor') {
     return res.redirect('/counselor-dashboard');
@@ -499,6 +597,7 @@ app.get('/dashboard', (req, res) => {
     return res.redirect('/student-dashboard');
   }
 
+  console.error('❌ Dashboard: Invalid role, redirecting to login');
   return res.redirect('/login');
 });
 
@@ -542,12 +641,18 @@ app.post('/submit-test', async function (req, res) {
 });
 
 app.get('/logout', (req, res) => {
+  const userEmail = req.session.userEmail;
+  console.log('👋 Logout request from:', userEmail || 'anonymous');
+  
   req.session.destroy((err) => {
     if (err) {
-      console.error('Session destroy error:', err);
+      console.error('❌ Session destroy error:', err);
       return res.redirect('/login');
     }
-    res.redirect('/login');
+    
+    console.log('✅ User logged out successfully');
+    res.clearCookie('careerpath.sid');
+    res.redirect('/login?logout=success');
   });
 });
 
