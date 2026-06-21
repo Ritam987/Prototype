@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="<%= description %>">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <% if (typeof showPreloader !== 'undefined' && showPreloader) { %>
+  <div class="preloader" id="preloader">
+    <div class="preloader-logo">CareerPath</div>
+    <div class="preloader-spinner"></div>
+    <p class="preloader-text">Preparing your career journey...</p>
+  </div>
+  <% } %>
+
+  <%- include('partials/navbar') %>
+
+  <main>
+    <section class="hero">
+      <div class="container">
+        <div class="hero-content">
+          <h1>Secure Your Career Path with Trusted Counseling</h1>
+          <p>Discover your strengths, explore career opportunities, and connect with expert counselors through our comprehensive psychometric assessment platform designed for students from 10th standard to graduation.</p>
+          <a href="/login" class="btn btn-primary">Take Your Free Assessment Now</a>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="services">
+      <div class="container">
+        <h2 class="section-title">Our Services</h2>
+        <p class="section-subtitle">Professional career guidance tailored to help you make confident decisions about your future.</p>
+        <div class="services-grid">
+          <article class="service-card">
+            <div class="service-icon">&#128202;</div>
+            <h3>Personality Assessments</h3>
+            <p>Comprehensive 50-question psychometric evaluation covering aptitude, personality, interests, emotional intelligence, and practical skills.</p>
+          </article>
+          <article class="service-card">
+            <div class="service-icon">&#127891;</div>
+            <h3>Academic Career Counseling</h3>
+            <p>Personalized guidance aligned with your educational level, helping you choose the right academic and vocational pathways.</p>
+          </article>
+          <article class="service-card">
+            <div class="service-icon">&#128188;</div>
+            <h3>Job Interview Preparation</h3>
+            <p>Expert counselor support to build confidence, refine communication skills, and prepare for real-world career opportunities.</p>
+          </article>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" style="background: var(--white);">
+      <div class="container">
+        <h2 class="section-title">Success Stories</h2>
+        <p class="section-subtitle">Real students who transformed their career direction through our platform.</p>
+        <div class="testimonials-grid">
+          <article class="testimonial-card">
+            <p>"The psychometric test helped me understand my strengths in logical thinking. My counselor guided me toward IT training, and I now work as a junior developer in Hyderabad."</p>
+            <div class="testimonial-author">
+              <div class="author-avatar">AK</div>
+              <div class="author-info">
+                <strong>Arjun K.</strong>
+                <span>12th Standard Graduate, Hyderabad</span>
+              </div>
+            </div>
+          </article>
+          <article class="testimonial-card">
+            <p>"I was unsure about my career after 10th. The assessment showed my interest in helping others, and my counselor connected me with social work training in Kolkata."</p>
+            <div class="testimonial-author">
+              <div class="author-avatar">SD</div>
+              <div class="author-info">
+                <strong>Sneha D.</strong>
+                <span>Social Work Trainee, Kolkata</span>
+              </div>
+            </div>
+          </article>
+          <article class="testimonial-card">
+            <p>"The career report was detailed and easy to understand. My assigned counselor helped me explore finance courses that matched my numeracy skills perfectly."</p>
+            <div class="testimonial-author">
+              <div class="author-avatar">RM</div>
+              <div class="author-info">
+                <strong>Ravi M.</strong>
+                <span>Graduation Student, Hajipur</span>
+              </div>
+            </div>
+          </article>
+          <article class="testimonial-card">
+            <p>"As a counselor on this platform, I can efficiently review student reports and provide targeted guidance. The assignment system makes my workflow seamless."</p>
+            <div class="testimonial-author">
+              <div class="author-avatar">PS</div>
+              <div class="author-info">
+                <strong>Dr. Priya S.</strong>
+                <span>Career Counselor, IT Specialization</span>
+              </div>
+            </div>
+          </article>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <%- include('partials/footer', { footerText: footerText }) %>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

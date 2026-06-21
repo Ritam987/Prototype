@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="<%= description %>">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <main>
+    <section class="page-hero-small">
+      <div class="container">
+        <h1>Frequently Asked Questions</h1>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="content-card">
+          <div class="accordion">
+            <div class="accordion-item">
+              <button type="button" class="accordion-header">
+                What is the CareerPath psychometric test?
+                <span class="accordion-icon">+</span>
+              </button>
+              <div class="accordion-body">
+                The CareerPath assessment is a 50-question test divided into five sections: Aptitude, Personality Traits, Career Interests, Emotional Intelligence, and Skills &amp; Abilities. It is designed for students from 10th standard to graduation level.
+              </div>
+            </div>
+            <div class="accordion-item">
+              <button type="button" class="accordion-header">
+                How long does the assessment take?
+                <span class="accordion-icon">+</span>
+              </button>
+              <div class="accordion-body">
+                Most students complete the full assessment in 30 to 45 minutes. You can navigate between sections using the progress controls, and your answers are saved as you go.
+              </div>
+            </div>
+            <div class="accordion-item">
+              <button type="button" class="accordion-header">
+                Is the assessment free?
+                <span class="accordion-icon">+</span>
+              </button>
+              <div class="accordion-body">
+                Yes. CareerPath offers free psychometric assessments and career report generation for eligible students in our target communities. Counselor guidance sessions are also provided at no cost during the pilot phase.
+              </div>
+            </div>
+            <div class="accordion-item">
+              <button type="button" class="accordion-header">
+                How is my counselor assigned?
+                <span class="accordion-icon">+</span>
+              </button>
+              <div class="accordion-body">
+                After you submit your test, the system generates a rule-based career report and matches you with a counselor whose specialization aligns with your recommended career path. If multiple counselors match, one is selected randomly to balance workload.
+              </div>
+            </div>
+            <div class="accordion-item">
+              <button type="button" class="accordion-header">
+                How do I connect with my counselor?
+                <span class="accordion-icon">+</span>
+              </button>
+              <div class="accordion-body">
+                Once assigned, your counselor's name, specialization, email, and phone number appear on your dashboard and career report. Contact them directly via email or phone for offline guidance sessions.
+              </div>
+            </div>
+            <div class="accordion-item">
+              <button type="button" class="accordion-header">
+                Can I become a counselor on this platform?
+                <span class="accordion-icon">+</span>
+              </button>
+              <div class="accordion-body">
+                Yes. Select "I am a Career Counselor" during registration and provide your area of specialization and years of experience. Once registered, you can view assigned students and manage session status from your counselor dashboard.
+              </div>
+            </div>
+            <div class="accordion-item">
+              <button type="button" class="accordion-header">
+                Is my data secure?
+                <span class="accordion-icon">+</span>
+              </button>
+              <div class="accordion-body">
+                CareerPath follows strict data protection practices. Your assessment responses and personal information are stored securely and shared only with your assigned counselor. Read our Privacy Policy for full details.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="<%= description %>">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <main>
+    <section class="report-page">
+      <div class="container">
+        <div class="report-header">
+          <h1>Your Career Assessment Report</h1>
+          <p style="color: var(--text-muted);">Prepared for <strong id="studentName">Student</strong> on <span id="reportDate">Date</span></p>
+        </div>
+
+        <div class="scores-grid">
+          <div class="score-module">
+            <div class="score-value" id="aptitudeScore"><%= report ? report.scores.aptitude + ' / 10' : '0 / 10' %></div>
+            <div class="score-label">Aptitude Score</div>
+          </div>
+          <div class="score-module">
+            <div class="score-value" id="personalityScore"><%= report ? report.scores.personality + ' / 50' : '0 / 50' %></div>
+            <div class="score-label">Personality &amp; Work Style</div>
+          </div>
+          <div class="score-module">
+            <div class="score-value" id="interestScore"><%= report ? report.scores.careerInterests + ' pts' : '0 pts' %></div>
+            <div class="score-label">Career Interest Strength</div>
+          </div>
+          <div class="score-module">
+            <div class="score-value" id="eiScore"><%= report ? report.scores.emotionalIntelligence + ' / 50' : '0 / 50' %></div>
+            <div class="score-label">Emotional Intelligence</div>
+          </div>
+          <div class="score-module">
+            <div class="score-value" id="skillsScore"><%= report ? report.scores.skills + ' / 10' : '0 / 10' %></div>
+            <div class="score-label">Skills &amp; Abilities</div>
+          </div>
+        </div>
+
+        <div class="recommendation-block">
+          <h2>Recommended Career Path</h2>
+          <p class="recommendation-path" id="recommendedPath"><%= report ? report.recommendedPath : 'Pending Assessment' %></p>
+        </div>
+
+        <div class="content-card" style="margin-bottom: 2rem;">
+          <h3 style="color: var(--primary-blue); margin-bottom: 0.75rem;">Interpretation Summary</h3>
+          <p id="interpretationText" style="color: var(--text-muted); line-height: 1.8;"><%= report ? report.interpretation : '' %></p>
+        </div>
+
+        <div class="report-counselor-module">
+          <h3>Your Assigned Counselor</h3>
+          <p style="color: var(--text-muted); margin-bottom: 1.25rem;">Connect with your counselor offline for personalized guidance based on this report.</p>
+          <p style="font-weight: 700; font-size: 1.125rem; color: var(--primary-blue); margin-bottom: 0.5rem;" id="counselorName"><%= report ? report.counselor.name : 'Counselor Name' %></p>
+          <div class="counselor-detail">
+            <span>&#128188;</span>
+            <span id="counselorSpec"><%= report ? report.counselor.specialization : 'Specialization' %></span>
+          </div>
+          <div class="counselor-detail">
+            <span>&#9993;</span>
+            <a href="<%= report ? 'mailto:' + report.counselor.email : '#' %>" id="counselorEmail" style="color: var(--secondary-green);"><%= report ? report.counselor.email : 'email@careerpath.org' %></a>
+          </div>
+          <div class="counselor-detail">
+            <span>&#128222;</span>
+            <span id="counselorPhone"><%= report ? report.counselor.phone : '+91 00000 00000' %></span>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 2rem;">
+          <a href="/student-dashboard" class="btn btn-secondary">Back to Dashboard</a>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <%- include('partials/footer', { footerPlatformLinks: [{ href: '/student-dashboard', label: 'Dashboard' }, { href: '/', label: 'Home' }] }) %>
+
+  <script>
+    window.__SERVER_REPORT__ = <%- JSON.stringify(report || null) %>;
+  </script>
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/report.js"></script>
+</body>
+</html>

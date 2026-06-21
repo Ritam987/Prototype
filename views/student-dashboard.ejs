@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="<%= description %>">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <main>
+    <section class="dashboard-page">
+      <div class="container">
+        <div class="dashboard-header">
+          <h1>Student Dashboard</h1>
+          <p>Track your assessment progress and connect with your assigned career counselor.</p>
+        </div>
+
+        <div class="profile-card">
+          <div class="profile-avatar" id="profileInitials">ST</div>
+          <div class="profile-details">
+            <h2 id="profileName">Student Name</h2>
+            <p id="profileEmail" style="color: var(--text-muted); margin-bottom: 0.75rem;">student@email.com</p>
+            <div class="profile-meta">
+              <span class="profile-tag" id="profileLevel">12th Standard</span>
+              <span class="profile-tag" id="profileStatus">Test Pending</span>
+            </div>
+          </div>
+        </div>
+
+        <div id="pendingBlock" class="status-pending-block">
+          <div class="pulse-indicator">
+            <span class="pulse-dot"></span>
+            Assessment Pending
+          </div>
+          <h2>Your Career Assessment Awaits</h2>
+          <p>Complete the 50-question psychometric test to receive your personalized career report and counselor assignment.</p>
+          <a href="/test" class="btn btn-primary">Start Psychometric Test Now</a>
+        </div>
+
+        <div id="completedBlock" class="status-completed-block hidden">
+          <div class="report-link-card">
+            <h3>Assessment Complete</h3>
+            <p>Your career report has been generated based on your responses across all five assessment sections.</p>
+            <a href="/report">View Your Career Assessment Report &rarr;</a>
+          </div>
+          <div class="counselor-card">
+            <h3>Your Assigned Counselor</h3>
+            <span class="counselor-badge">Verified Counselor</span>
+            <p style="font-weight: 700; color: var(--primary-blue); margin-bottom: 0.75rem;" id="assignedCounselorName">Counselor Name</p>
+            <div class="counselor-detail">
+              <span>&#128188;</span>
+              <span id="assignedCounselorSpec">Specialization</span>
+            </div>
+            <div class="counselor-detail">
+              <span>&#9993;</span>
+              <span id="assignedCounselorEmail">email@careerpath.org</span>
+            </div>
+            <div class="counselor-detail">
+              <span>&#128222;</span>
+              <span id="assignedCounselorPhone">+91 00000 00000</span>
+            </div>
+            <p style="margin-top: 1rem; font-size: 0.875rem; color: var(--text-muted);">Contact your counselor via email or phone for offline guidance sessions.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <%- include('partials/footer', { footerPlatformLinks: [{ href: '/', label: 'Home' }, { href: '/about', label: 'About Us' }] }) %>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/student-dashboard.js"></script>
+</body>
+</html>

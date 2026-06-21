@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="<%= description %>">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <main>
+    <section class="page-hero-small">
+      <div class="container">
+        <h1>Contact Us</h1>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="content-card">
+          <div class="contact-grid">
+            <div>
+              <h2 style="color: var(--primary-blue); margin-bottom: 1.5rem;">Send Us a Message</h2>
+              <form id="contactForm">
+                <div class="form-group">
+                  <label for="contactName">Full Name</label>
+                  <input type="text" id="contactName" name="name" required placeholder="Your full name">
+                </div>
+                <div class="form-group">
+                  <label for="contactEmail">Email Address</label>
+                  <input type="email" id="contactEmail" name="email" required placeholder="you@example.com">
+                </div>
+                <div class="form-group">
+                  <label for="contactMessage">Message</label>
+                  <textarea id="contactMessage" name="message" rows="5" required placeholder="How can we help you?"></textarea>
+                </div>
+                <button type="submit" class="btn btn-secondary">Send Message</button>
+              </form>
+            </div>
+            <div>
+              <h2 style="color: var(--primary-blue); margin-bottom: 1.5rem;">Our Offices</h2>
+              <div class="office-card">
+                <h4>Hyderabad Office</h4>
+                <p>Plot 42, Community Education Center, Banjara Hills, Hyderabad, Telangana 500034</p>
+                <p>Phone: +91 40 1234 5678</p>
+              </div>
+              <div class="office-card">
+                <h4>Kolkata Office</h4>
+                <p>15 Park Street, Career Guidance Hub, Kolkata, West Bengal 700016</p>
+                <p>Phone: +91 33 9876 5432</p>
+              </div>
+              <div class="office-card">
+                <h4>Hajipur Office</h4>
+                <p>Near Vaishali District Center, Hajipur, Bihar 844101</p>
+                <p>Phone: +91 622 234 5678</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>

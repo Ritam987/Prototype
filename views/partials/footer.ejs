@@ -1,0 +1,31 @@
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">CareerPath</div>
+        <p><%= typeof footerText !== 'undefined' ? footerText : 'Empowering students with trusted career counseling and psychometric assessments.' %></p>
+      </div>
+      <div class="footer-links">
+        <h4>Quick Links</h4>
+        <a href="/privacy">Privacy Policy</a>
+        <a href="/faqs">FAQs</a>
+        <a href="/contact">Contact Us</a>
+      </div>
+      <div class="footer-links">
+        <h4>Platform</h4>
+        <% if (typeof footerPlatformLinks !== 'undefined') { %>
+          <% footerPlatformLinks.forEach(function(link) { %>
+            <a href="<%= link.href %>"><%= link.label %></a>
+          <% }); %>
+        <% } else { %>
+          <a href="/login">Sign Up / Login</a>
+          <a href="/about">About Us</a>
+          <a href="/">Home</a>
+        <% } %>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 CareerPath. All rights reserved.</p>
+    </div>
+  </div>
+</footer>

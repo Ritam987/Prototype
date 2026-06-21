@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="<%= description %>">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <main>
+    <div class="test-header">
+      <div class="container">
+        <div class="progress-wrapper">
+          <div class="progress-label">
+            <span>Assessment Progress</span>
+            <span id="progressText">Section 1 of 5</span>
+          </div>
+          <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+          </div>
+        </div>
+        <div class="section-nav-dots">
+          <div class="section-dot active" data-section="0">1</div>
+          <div class="section-dot" data-section="1">2</div>
+          <div class="section-dot" data-section="2">3</div>
+          <div class="section-dot" data-section="3">4</div>
+          <div class="section-dot" data-section="4">5</div>
+        </div>
+      </div>
+    </div>
+
+    <section class="test-page">
+      <div class="container">
+        <form id="testForm" action="/submit-test" method="POST">
+          <input type="hidden" name="answers" id="answersPayload">
+          <div id="testSections"></div>
+        </form>
+
+        <div class="test-nav-buttons">
+          <button type="button" class="btn btn-outline hidden" id="prevSection">Previous Section</button>
+          <button type="button" class="btn btn-secondary" id="nextSection">Next Section</button>
+          <button type="button" class="btn btn-primary hidden" id="submitTest">Submit My Answers</button>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <%- include('partials/footer', { footerPlatformLinks: [{ href: '/student-dashboard', label: 'Dashboard' }, { href: '/', label: 'Home' }] }) %>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="/js/questions.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/test.js"></script>
+</body>
+</html>

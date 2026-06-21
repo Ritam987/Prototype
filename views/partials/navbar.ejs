@@ -1,0 +1,17 @@
+<nav class="glass-nav">
+  <div class="container nav-inner">
+    <a href="/" class="nav-logo">CareerPath</a>
+    <button class="hamburger" id="hamburger" type="button" aria-label="Toggle navigation menu">
+      <span></span>
+      <span></span>
+      <span></span>
+    </button>
+    <div class="nav-links" id="navLinks">
+      <a href="/" class="<%= page === 'home' ? 'active' : '' %>">Home</a>
+      <a href="/about" class="<%= page === 'about' ? 'active' : '' %>">About Us</a>
+      <a href="/contact" class="<%= page === 'contact' ? 'active' : '' %>">Contact Us</a>
+      <a href="/faqs" class="<%= page === 'faqs' ? 'active' : '' %>">FAQs</a>
+      <a href="<%= dashboardHref || '/login' %>" class="nav-dashboard <%= page === 'student-dashboard' || page === 'counselor-dashboard' ? 'active' : '' %>" id="dashboardLink">My Dashboard</a>
+    </div>
+  </div>
+</nav>

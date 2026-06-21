@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="<%= description %>">
+  <title><%= title %></title>
+  <link rel="stylesheet" href="/css/styles.css">
+</head>
+<body>
+  <%- include('partials/navbar') %>
+
+  <main>
+    <section class="page-hero-small">
+      <div class="container">
+        <h1>Privacy Policy</h1>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="content-card privacy-content">
+          <p><strong>Last updated:</strong> June 21, 2026</p>
+
+          <h2>Introduction</h2>
+          <p>CareerPath ("we," "our," or "us") is committed to protecting the privacy and security of your personal information. This Privacy Policy explains how we collect, use, store, and safeguard data when you use our career counseling web application.</p>
+
+          <h2>Information We Collect</h2>
+          <p>When you register on CareerPath, we may collect the following information:</p>
+          <ul>
+            <li>Full name and email address</li>
+            <li>Account role (student or counselor)</li>
+            <li>Educational level (for students) or specialization and experience (for counselors)</li>
+            <li>Psychometric test responses and generated career reports</li>
+            <li>Session status and counselor assignment records</li>
+          </ul>
+
+          <h2>How We Use Your Information</h2>
+          <p>We use collected data exclusively to:</p>
+          <ul>
+            <li>Provide personalized career assessment reports</li>
+            <li>Match students with appropriate career counselors</li>
+            <li>Enable counselors to review student reports and track guidance sessions</li>
+            <li>Improve platform functionality and user experience</li>
+            <li>Communicate important updates about your account or sessions</li>
+          </ul>
+
+          <h2>Data Sharing</h2>
+          <p>Your assessment results are shared only with your assigned career counselor to facilitate offline guidance sessions. We do not sell, rent, or trade your personal information to third parties for marketing purposes.</p>
+
+          <h2>Data Security</h2>
+          <p>We implement industry-standard security measures including encrypted data transmission, secure authentication, and access controls. While no system is completely immune to breaches, we continuously monitor and update our security practices.</p>
+
+          <h2>Data Retention</h2>
+          <p>Assessment data and account information are retained for as long as your account is active or as needed to provide counseling services. You may request deletion of your account and associated data by contacting us.</p>
+
+          <h2>Your Rights</h2>
+          <p>You have the right to access, correct, or delete your personal data. You may also request a copy of your assessment report at any time through your student dashboard or by contacting our support team.</p>
+
+          <h2>Contact</h2>
+          <p>For privacy-related inquiries, please contact us at <a href="mailto:privacy@careerpath.org" style="color: var(--secondary-green);">privacy@careerpath.org</a> or visit our <a href="/contact" style="color: var(--secondary-green);">Contact Us</a> page.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <%- include('partials/footer') %>
+
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
