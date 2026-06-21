@@ -127,7 +127,10 @@ SUPABASE_SERVICE_ROLE_KEY=your_supabase_service_role_key
 SESSION_SECRET=your_random_secret_key_min_32_characters
 
 # OAuth Configuration
-OAUTH_REDIRECT_URL=http://localhost:3000
+# IMPORTANT: For production (Vercel), leave this EMPTY
+# The app will automatically detect your production URL
+# For local development only: http://localhost:3000
+OAUTH_REDIRECT_URL=
 
 # PostgreSQL Configuration (for local Supabase)
 POSTGRES_DB=careerpath
@@ -247,11 +250,22 @@ vercel
 ```
 
 3. **Configure Environment Variables** in Vercel Dashboard:
-   - Add all variables from `.env`
-   - Update `OAUTH_REDIRECT_URL` to your Vercel domain
+   - Add all variables from `.env` EXCEPT `OAUTH_REDIRECT_URL`
+   - **CRITICAL:** Leave `OAUTH_REDIRECT_URL` empty or unset in Vercel (the app will auto-detect)
+   - Never set `OAUTH_REDIRECT_URL` to localhost in production
+   - Set `NODE_ENV=production`
 
 4. **Update Supabase OAuth Redirect URLs**:
    - Add your Vercel domain to authorized redirect URLs
+   - Use pattern: `https://your-project-name-*.vercel.app/auth/callback` for preview deployments
+
+5. **Verify Deployment**:
+```bash
+# Check logs for OAuth redirect URL
+vercel logs your-project-name --follow
+```
+
+See [VERCEL_DEPLOYMENT.md](VERCEL_DEPLOYMENT.md) for detailed instructions on fixing OAuth redirect issues.
 
 The project includes a `vercel.json` configuration file that handles:
 - Node.js serverless function deployment

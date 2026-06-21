@@ -79,9 +79,17 @@ function getRequestOrigin(req) {
 function getOAuthRedirectUrl(req) {
   const configured = requiredText(process.env.OAUTH_REDIRECT_URL);
 
+  // If OAUTH_REDIRECT_URL is configured and valid, use it
   if (configured) {
     try {
       const url = new URL(configured);
+      
+      // Security: Block localhost URLs in production
+      if (isProduction && (url.hostname === 'localhost' || url.hostname === '127.0.0.1')) {
+        console.warn('⚠️ SECURITY WARNING: localhost URL detected in production environment. Using request origin instead.');
+        return new URL('/auth/callback', getRequestOrigin(req)).toString();
+      }
+      
       if (url.pathname.replace(/\/+$/, '') === '/auth/callback') {
         return url.toString();
       }
@@ -91,7 +99,10 @@ function getOAuthRedirectUrl(req) {
     }
   }
 
-  return new URL('/auth/callback', getRequestOrigin(req)).toString();
+  // Fallback to dynamic detection from request
+  const dynamicUrl = new URL('/auth/callback', getRequestOrigin(req)).toString();
+  console.log('Using dynamic OAuth redirect URL:', dynamicUrl);
+  return dynamicUrl;
 }
 
 function createSessionStorage(req) {
@@ -258,6 +269,14 @@ app.get('/auth/google', async (req, res) => {
   if (!authClient) return res.status(500).send('Supabase auth client not initialized');
 
   const redirectTo = getOAuthRedirectUrl(req);
+  
+  // Debug logging (remove in production if needed)
+  console.log('🔐 OAuth Flow Started:', {
+    environment: isProduction ? 'production' : 'development',
+    redirectTo: redirectTo,
+    origin: getRequestOrigin(req)
+  });
+  
   const { data, error } = await authClient.auth.signInWithOAuth({
     provider: 'google',
     options: {
