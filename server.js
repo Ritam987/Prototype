@@ -135,11 +135,22 @@ function createSessionStorage(req) {
       return value;
     },
     setItem(key, value) {
+      if (!req.session.supabaseOAuthStorage) {
+        req.session.supabaseOAuthStorage = {};
+      }
       req.session.supabaseOAuthStorage[key] = value;
       console.log('💾 Session Storage SET:', key, '(stored)');
-      // Force save session immediately
-      req.session.save((err) => {
-        if (err) console.error('❌ Session save error:', err);
+      // Return a promise that resolves after session save
+      return new Promise((resolve, reject) => {
+        req.session.save((err) => {
+          if (err) {
+            console.error('❌ Session save error:', err);
+            reject(err);
+          } else {
+            console.log('✅ Session saved after SET');
+            resolve();
+          }
+        });
       });
     },
     removeItem(key) {
@@ -147,6 +158,7 @@ function createSessionStorage(req) {
         delete req.session.supabaseOAuthStorage[key];
         console.log('🗑️ Session Storage REMOVE:', key);
       }
+      return Promise.resolve();
     }
   };
 }
@@ -339,9 +351,79 @@ app.get('/api/config-check', function (req, res) {
     envVars: {
       OAUTH_REDIRECT_URL: process.env.OAUTH_REDIRECT_URL ? '(set)' : '(empty)',
       SUPABASE_URL: process.env.SUPABASE_URL ? '(set)' : '(missing)',
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? '(set - ' + process.env.SUPABASE_ANON_KEY.substring(0, 20) + '...)' : '(missing)',
+      SESSION_SECRET: process.env.SESSION_SECRET ? '(set)' : '(missing)',
       PORT: process.env.PORT
+    },
+    supabaseCheck: {
+      clientInitialized: !!supabase,
+      urlValid: !!(supabaseUrl && supabaseUrl.includes('supabase.co')),
+      anonKeyValid: !!(supabaseAnonKey && supabaseAnonKey.length > 20)
     }
   });
+});
+
+// Debug endpoint to test OAuth flow
+app.get('/api/test-oauth', async function (req, res) {
+  if (process.env.NODE_ENV === 'production' && process.env.ENABLE_CONFIG_CHECK !== 'true') {
+    return res.status(404).send('Not found');
+  }
+
+  try {
+    const authClient = createOAuthClient(req);
+    
+    if (!authClient) {
+      return res.json({
+        success: false,
+        error: 'OAuth client creation failed',
+        details: {
+          supabaseUrl: !!supabaseUrl,
+          supabaseAnonKey: !!supabaseAnonKey
+        }
+      });
+    }
+
+    const redirectTo = getOAuthRedirectUrl(req);
+    
+    const { data, error } = await authClient.auth.signInWithOAuth({
+      provider: 'google',
+      options: {
+        redirectTo: redirectTo,
+        queryParams: {
+          access_type: 'offline',
+          prompt: 'consent'
+        }
+      }
+    });
+
+    if (error) {
+      return res.json({
+        success: false,
+        error: 'Supabase signInWithOAuth error',
+        details: {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        }
+      });
+    }
+
+    res.json({
+      success: true,
+      hasUrl: !!data?.url,
+      urlPreview: data?.url ? data.url.substring(0, 50) + '...' : null
+    });
+
+  } catch (err) {
+    res.json({
+      success: false,
+      error: 'Unexpected error',
+      details: {
+        message: err.message,
+        stack: err.stack
+      }
+    });
+  }
 });
 
 app.get('/auth/google', async (req, res) => {
