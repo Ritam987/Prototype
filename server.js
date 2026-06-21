@@ -32,6 +32,7 @@ const PORT = process.env.PORT || 3000;
 const SESSION_SECRET = process.env.SESSION_SECRET || 'career_path_secret_key_change_in_production';
 const isProduction = process.env.NODE_ENV === 'production';
 
+// Force trust proxy in production (Vercel serves over HTTPS)
 if (isProduction) {
   app.set('trust proxy', 1);
 }
@@ -39,18 +40,37 @@ if (isProduction) {
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+// Session configuration with production-ready settings
 app.use(session({
   secret: SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: isProduction,
+    secure: isProduction, // HTTPS only in production
     httpOnly: true,
     sameSite: 'lax',
-    maxAge: 24 * 60 * 60 * 1000
+    maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    path: '/' // Ensure cookie is sent for all paths
   },
-  name: 'careerpath.sid' // Give the session cookie a specific name
+  name: 'careerpath.sid',
+  proxy: isProduction // Trust proxy in production
 }));
+
+// Log session initialization
+app.use((req, res, next) => {
+  if (req.path.startsWith('/auth') || req.path.startsWith('/dashboard') || req.path.startsWith('/setup-profile')) {
+    console.log('🔐 Session Check:', {
+      path: req.path,
+      sessionID: req.sessionID,
+      hasSession: !!req.session,
+      googleAuthenticated: req.session?.googleAuthenticated,
+      isProfileCompleted: req.session?.isProfileCompleted,
+      userRole: req.session?.userRole,
+      cookies: Object.keys(req.cookies || {})
+    });
+  }
+  next();
+});
 
 app.use(express.static('public'));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -220,6 +240,12 @@ app.get('/', function (req, res) {
 });
 
 app.get('/login', function (req, res) {
+  // If user is already logged in, redirect to dashboard
+  if (req.session && req.session.googleAuthenticated && req.session.isProfileCompleted) {
+    console.log('✅ User already authenticated, redirecting to dashboard');
+    return res.redirect('/dashboard');
+  }
+  
   res.render('login-signup', viewData('login', {
     title: 'CareerPath | Login & Sign Up',
     description: 'Sign up or log in to CareerPath career counseling platform.',
