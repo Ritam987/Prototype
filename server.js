@@ -2,6 +2,7 @@ require('dotenv').config({ quiet: true });
 const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
+const cookieParser = require('cookie-parser');
 const path = require('path');
 const { createClient } = require('@supabase/supabase-js');
 const { calculateTestResult } = require('./utils/scoring');
@@ -39,6 +40,9 @@ if (isProduction) {
 
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
+
+// Parse cookies before session
+app.use(cookieParser());
 
 // Session configuration with production-ready settings
 app.use(session({
